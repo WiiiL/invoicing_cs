@@ -1,6 +1,3 @@
-# invoicing_cs
-MagniFinance Invoicing Integration code sample
+# C# MagniFinance Invoicing Integration code sample
 
-This code sample should not be used for production.
-
-It is provided as a base sample for your invoicing integration needs.
+This code sample is not be used for production, it is provided as a base sample for your invoicing integration needs.
