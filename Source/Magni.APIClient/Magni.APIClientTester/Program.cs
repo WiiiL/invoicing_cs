@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Magni.APIClientTester
 {
@@ -11,7 +7,6 @@ namespace Magni.APIClientTester
     {
         static Program()
         {
-            Assembly.Load("System.ServiceModel.Primities");
         }
 
         static void Main(string[] args)
