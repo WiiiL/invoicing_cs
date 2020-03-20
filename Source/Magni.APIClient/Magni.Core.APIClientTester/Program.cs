@@ -6,12 +6,20 @@ namespace Magni.Core.APIClientTester
 {
     class Program
     {
+        public static string sentToEmail;
+
         static void Main(string[] args)
         {
+            sentToEmail = "api_demo@magnifinance.com";
             string devEndpoint = "https://magnidev-slot2.azurewebsites.net/MagniAPI/Invoicing.asmx";
             string sandbox = "https://bo.magnifinance.com/MagniAPI/Invoicing.asmx";
 
-            Magni.APIClient.V2.Invoicing api = new Magni.APIClient.V2.Invoicing(devEndpoint, email: "willian.pinfildi@magnifinance.com", token: "bU7iHN9HeE9wsKfm4EN-");
+            Magni.APIClient.V2.Invoicing api_01 = new Magni.APIClient.V2.Invoicing(devEndpoint, email: "willian.pinfildi@magnifinance.com", token: "bU7iHN9HeE9wsKfm4EN-");
+            //Magni.APIClient.V2.Invoicing api = new Magni.APIClient.V2.Invoicing(devEndpoint, email: "wiiilpinfildi+0912@gmail.com", token: "vs1qzyxas20v8c23yrwg");
+            Magni.APIClient.V2.Invoicing api_03 = new Magni.APIClient.V2.Invoicing(devEndpoint, email: "ccrisgp@hotmail.com", token: "axzna582bk5tuykg1uo");
+
+            Magni.APIClient.V2.Invoicing api_bo_tv = new Magni.APIClient.V2.Invoicing(sandbox, email: "nikola.tesla.sandbox@magnifinance.com", token: "u55TUxfA17w2H8VvHW5h");
+
             //Magni.APIClient.V2.Invoicing api = new Magni.APIClient.V2.Invoicing(sandbox, email: "nikola.tesla.sandbox @magnifinance.com", token: "u55TUxfA17w2H8VvHW5h");
 
             //AddPartner(api);
@@ -20,8 +28,11 @@ namespace Magni.Core.APIClientTester
             //PartnerScenario(api);
             //GetDocument(api);
 
-            //AddPartner_Scenario_01(api);
-            CreateSimpleInvoice_Scenario_01(api);
+            //AddPartner_Scenario_01(api_03);
+            //CreateSimpleInvoice_Scenario_01(api_01);
+
+            //AddPartner_Scenario_01(api_bo_tv);
+            CreateSimpleInvoice_Scenario_01(api_bo_tv);
         }
 
 
@@ -51,7 +62,7 @@ namespace Magni.Core.APIClientTester
 
             if(response.Type == APIClient.V2.Models.ResponseType.Success)
             {
-                string password = "adsasda9s8dahjoahhd";
+                string password = "Pa@word1";
                 string partnerTaxId = "999999990";
 
                 var partnerTokens = api.GetPartnerAccessTokens(password, partnerTaxId);
@@ -104,7 +115,7 @@ namespace Magni.Core.APIClientTester
                 UnitPrice = 10
             });
 
-            var response = api.InvoiceSimplifiedCreate(client, invoice, isToClose: false, sentTo: "tiago.vieira@magnifinance.com");
+            var response = api.InvoiceSimplifiedCreate(client, invoice, isToClose: false, sentTo: sentToEmail);
             
 
             if (response.Type == APIClient.V2.Models.ResponseType.Success)
@@ -125,12 +136,17 @@ namespace Magni.Core.APIClientTester
 
                 creditNote.Lines.Add(invoice.Lines.First());
 
-                var creditNoteResponse = api.CreditNoteCreate(client, creditNote, isToClose: false, sentTo: "tiago.vieira@magnifinance.com");
+                var creditNoteResponse = api.CreditNoteCreate(client, creditNote, isToClose: false, sentTo: sentToEmail);
 
-                if(creditNoteResponse.Type == APIClient.V2.Models.ResponseType.Success)
+                if (creditNoteResponse.Type == APIClient.V2.Models.ResponseType.Success)
                 {
                     invoice.Lines.First().UnitPrice = 8;
-                    response = api.InvoiceSimplifiedCreate(client, invoice, isToClose: false, sentTo: "tiago.vieira@magnifinance.com");
+                    response = api.InvoiceSimplifiedCreate(client, invoice, isToClose: false, sentTo: sentToEmail);
+
+                    if (response.Type == APIClient.V2.Models.ResponseType.Success)
+                    {
+                        var documentFile = api.DocumentGet(response.Document.DocumentId);
+                    }
                 }
             }
         }
