@@ -64,22 +64,36 @@ namespace Magni.APIClient.V2
             return GetPartnerAccessTokenAPIResponse(serviceResponse);
         }
 
-
-        public object CreateSimplefiedInvoice(IAuthentication authentication)
+        /// <summary>
+        /// Create simplified invoice
+        /// </summary>
+        /// <param name="client">Client identification</param>
+        /// <param name="invoice">Purchase information</param>
+        /// <param name="isToClose">Should the document be closed (true) in which case it cannot be later changed and a PDF and document number are generated or should the document be created as a draft (false) in which case no PDF or document number are generated.</param>
+        /// <param name="sentTo">Upon closing the document an email can be sent with a notification of the document to an email address.</param>
+        public APIDocumentCreateResponse InvoiceSimplifiedCreate(Models.Client client, SimplifiedInvoice invoice, bool isToClose, string sentTo)
         {
-            return this.CreateSimplefiedInvoiceAsync().Result;
+            Invoicing_v2.InvoicingSoapClient apiClient = GetClient();
+            Invoicing_v2.Client invoiceClient = ToInvoicingClient(client);
+
+            DocumentIn document = ToInvoicingDocument(invoice);
+
+            var serviceResponse = apiClient.DocumentCreateAsync(GetAuthenticationCredentials(), invoiceClient, document, isToClose, sentTo).Result;
+
+            return new APIDocumentCreateResponse(serviceResponse);
         }
 
-        private object CreateInvoice(IAuthentication authentication)
+        public APIDocumentCreateResponse CreditNoteCreate(Models.Client client, CreditNote invoice, bool isToClose, string sentTo)
         {
-            return this.CreateSimplefiedInvoiceAsync().Result;
-        }
+            Invoicing_v2.InvoicingSoapClient apiClient = GetClient();
 
-        public async Task<Object> CreateSimplefiedInvoiceAsync()
-        {
-            var test = new Invoicing_v2.InvoicingSoapClient(Invoicing_v2.InvoicingSoapClient.EndpointConfiguration.InvoicingSoap12);
+            Invoicing_v2.Client invoiceClient = ToInvoicingClient(client);
 
-            return test.DocumentCreateAsync(new Invoicing_v2.Authentication(), new Invoicing_v2.Client(), new Invoicing_v2.DocumentIn(), IsToClose: false, SendTo: null);
+            DocumentIn document = ToInvoicingDocument(invoice);
+
+            var serviceResponse = apiClient.DocumentCreateAsync(GetAuthenticationCredentials(), invoiceClient, document, isToClose, sentTo).Result;
+
+            return new APIDocumentCreateResponse(serviceResponse);
         }
 
         #endregion
@@ -142,6 +156,23 @@ namespace Magni.APIClient.V2
             return new APIAddPartnerResponse(serviceResponse.Body.ResponseAddPartner);
         }
 
+        private APIDocumentGetResponse DocumentGetAPIResponse(DocumentGetResponse serviceResponse)
+        {
+            var apiResponse = new APIDocumentGetResponse(serviceResponse.Body.Response);
+
+            if (serviceResponse.Body.Response.Object != null)
+            {
+                apiResponse.Document = new Models.DocumentGetOut()
+                {
+                    DocumentNumber = serviceResponse.Body.Response.Object.DocumentNumber,
+                    DownloadUrl = serviceResponse.Body.Response.Object.DownloadUrl,
+                    ErrorMessage = serviceResponse.Body.Response.Object.ErrorMessage
+                };
+            }
+
+            return apiResponse;
+        }
+
         private APIGetPartnerAccessTokensResponse GetPartnerAccessTokenAPIResponse(GetPartnerAccessTokensResponse serviceResponse)
         {
             var apiResponse = new APIGetPartnerAccessTokensResponse(serviceResponse.Body.ResponseGetPartnerAccessTokens);
@@ -161,11 +192,57 @@ namespace Magni.APIClient.V2
             return apiResponse;
         }
 
-        private APIDocumentGetResponse DocumentGetAPIResponse(DocumentGetResponse serviceResponse)
+
+        private Invoicing_v2.Client ToInvoicingClient(Models.Client client)
         {
-            return new APIDocumentGetResponse();
+            return new Invoicing_v2.Client()
+            {
+                Name = client.Name,
+                NIF = client.NIF,
+                Address = client.Address,
+                City = client.City,
+                PostCode = client.PostCode,
+                CountryCode = client.CountryCode,
+                PhoneNumber = client.PhoneNumber
+            };
         }
 
+        private DocumentIn ToInvoicingDocument(Document invoice)
+        {
+            var document = new DocumentIn()
+            {
+                Type = invoice.Type.ToString(),
+                Date = invoice.Date.ToString(Constants.Format.DateTime.FullDateTime),
+                DueDate = invoice.DueDate.ToString(Constants.Format.DateTime.FullDateTime),
+                Description = invoice.Description,
+                Serie = invoice.Series,
+                TaxExemptionReasonCode = invoice.TaxExemptionReasonCode,
+                Currency = invoice.Currency,
+                EuroRate = invoice.EuroRate,
+                //Retention = invoice.Retemtion,
+                ExternalId = invoice.ExternalId,
+                Id = invoice.Id
+            };
+
+            document.Lines = new System.Collections.Generic.List<Invoicing_v2.APIInvoicingProduct>();
+#warning Retention missing from contract ???
+
+            document.Lines = invoice.Lines.Select(product => new Invoicing_v2.APIInvoicingProduct()
+            {
+                Code = product.Code,
+                Description = product.Description,
+                UnitPrice = product.UnitPrice,
+                Quantity = product.Quantity,
+                Unit = product.Unit,
+                Type = product.Type.ToString(),
+                TaxValue = product.TaxValue,
+                ProductDiscount = product.ProductDiscount,
+                CostCenter = product.CostCenter
+            })
+            .ToList();
+
+            return document;
+        }
 
         #endregion
 

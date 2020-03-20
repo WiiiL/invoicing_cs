@@ -8,9 +8,9 @@ namespace Magni.APIClient.V2.Models
     public class APIResponse
     {
         public string RequestId { get; set; }
-        public string Type { get; set; }
+        public ResponseType Type { get; set; }
         public ErrorType ErrorValue { get; set; }
-        public string ErrorHumeReadable { get; set; }
+        public string ErrorHumanReadable { get; set; }
         public List<ValidationError> ValidationErrors { get; set; }
 
         public APIResponse()
@@ -19,9 +19,9 @@ namespace Magni.APIClient.V2.Models
 
         internal APIResponse(Invoicing_v2.Response response)
         {
-            this.Type = response.Type.ToString();
+            this.Type = (int)ResponseType.Success == response.Type ? ResponseType.Success : ResponseType.Error;
             this.RequestId = response.RequestId;
-            this.ErrorHumeReadable = response.ErrorHumanReadable;
+            this.ErrorHumanReadable = response.ErrorHumanReadable;
 
             if (response.ErrorValue != null)
             {
@@ -46,6 +46,12 @@ namespace Magni.APIClient.V2.Models
                 .ToList();
             }
         }
+    }
+
+    public enum ResponseType
+    {
+        Success = 0,
+        Error = 1
     }
 
     public class ErrorType
