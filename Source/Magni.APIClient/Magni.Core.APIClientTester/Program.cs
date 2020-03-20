@@ -4,19 +4,17 @@ namespace Magni.Core.APIClientTester
 {
     class Program
     {
-        static Magni.APIClient.V2.Invoicing api;
-
         static void Main(string[] args)
         {
             string devEndpoint = "https://magnidev-slot2.azurewebsites.net/MagniAPI/Invoicing.asmx";
 
-            api = new Magni.APIClient.V2.Invoicing(devEndpoint, email: "willian.pinfildi@magnifinance.com", token: "bU7iHN9HeE9wsKfm4EN-");
+            Magni.APIClient.V2.Invoicing api = new Magni.APIClient.V2.Invoicing(devEndpoint, email: "willian.pinfildi@magnifinance.com", token: "bU7iHN9HeE9wsKfm4EN-");
 
-            AddPartner();
-
+            AddPartner(api);
+            GetPartnerAccessTokens(api);
         }
 
-        private static void AddPartner()
+        private static void AddPartner(Magni.APIClient.V2.Invoicing api)
         {
             var newPartner = new APIClient.V2.Models.PartnerInformation() {
                 CompanyAddress = "Morada",
@@ -31,6 +29,14 @@ namespace Magni.Core.APIClientTester
             };
 
             var response = api.AddPartner(newPartner);
+        }
+
+        private static void GetPartnerAccessTokens(Magni.APIClient.V2.Invoicing api)
+        {
+            string password = "adsasda9s8dahjoahhd";
+            string partnerTaxId = "123";
+
+            var response = api.GetPartnerAccessTokens(password, partnerTaxId);
         }
     }
 }

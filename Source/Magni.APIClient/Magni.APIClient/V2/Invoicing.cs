@@ -2,6 +2,7 @@
 using Magni.APIClient.V2.Models;
 using Magni.APIClient.V2.Models.Interfaces;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Magni.APIClient.V2
@@ -12,16 +13,6 @@ namespace Magni.APIClient.V2
         public string EMail { get; set; }
         public string Token { get; set; }
 
-        /*
-            -1 projeto que vai ser uma lead de Cliente, vai ter todos os metodos da API (objetivo é poder ser reutilizado por qualquer cliente).
-            -1 projeto de console aplication, com vários exemplos:
-            criar uma fatura simplificada.
-            registar o parceiro, 
-            buscar o token e 
-            emitir a fatura.
-            outros exemplos que possam fazer sentido.
-            Jorge e Tiago vão reunir no fim da daily para ver de que forma o Tiago vai iniciar este projeto.
-        */
 
         public Invoicing(string endpoint, string email, string token)
         {
@@ -55,6 +46,46 @@ namespace Magni.APIClient.V2
             return AddPartnerAPIResponse(serviceResponse);
         }
 
+        public APIDocumentGetResponse DocumentGet(int documentId)
+        {
+            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            
+            var serviceResponse = client.DocumentGetAsync(GetAuthenticationCredentials(), documentId).Result;
+
+            return DocumentGetAPIResponse(serviceResponse);
+        }
+       
+        public APIGetPartnerAccessTokensResponse GetPartnerAccessTokens(string password, string partnerTaxId)
+        {
+            Invoicing_v2.InvoicingSoapClient client = GetClient();
+
+            var serviceResponse = client.GetPartnerAccessTokensAsync(GetSpecialAuthenticationCredentials(password), partnerTaxId).Result;
+
+            return GetPartnerAccessTokenAPIResponse(serviceResponse);
+        }
+
+
+        public object CreateSimplefiedInvoice(IAuthentication authentication)
+        {
+            return this.CreateSimplefiedInvoiceAsync().Result;
+        }
+
+        private object CreateInvoice(IAuthentication authentication)
+        {
+            return this.CreateSimplefiedInvoiceAsync().Result;
+        }
+
+        public async Task<Object> CreateSimplefiedInvoiceAsync()
+        {
+            var test = new Invoicing_v2.InvoicingSoapClient(Invoicing_v2.InvoicingSoapClient.EndpointConfiguration.InvoicingSoap12);
+
+            return test.DocumentCreateAsync(new Invoicing_v2.Authentication(), new Invoicing_v2.Client(), new Invoicing_v2.DocumentIn(), IsToClose: false, SendTo: null);
+        }
+
+        #endregion
+
+        #region API Methods Async
+
         public Task<APIAddPartnerResponse> AddPartnerAsync(PartnerInformation newPartner)
         {
             Invoicing_v2.InvoicingSoapClient client = GetClient();
@@ -80,15 +111,6 @@ namespace Magni.APIClient.V2
             });
         }
 
-        public APIDocumentGetResponse DocumentGet(int documentId)
-        {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
-            
-            var serviceResponse = client.DocumentGetAsync(GetAuthenticationCredentials(), documentId).Result;
-
-            return DocumentGetAPIResponse(serviceResponse);
-        }
-        
         public Task<APIDocumentGetResponse> DocumentGetAsync(int documentId)
         {
             Invoicing_v2.InvoicingSoapClient client = GetClient();
@@ -99,47 +121,70 @@ namespace Magni.APIClient.V2
                 return DocumentGetAPIResponse(serviceResponse);
             });
         }
-        
-        public object CreateSimplefiedInvoice(IAuthentication authentication)
+
+        public Task<APIGetPartnerAccessTokensResponse> GetPartnerAccessTokensAsync(string password, string partnerTaxId)
         {
-            return this.CreateSimplefiedInvoiceAsync().Result;
-        }
+            Invoicing_v2.InvoicingSoapClient client = GetClient();
 
-        public void GetPartnerAccessTokens()
-        {
+            return Task.Run<APIGetPartnerAccessTokensResponse>(async () => {
+                var serviceResponse = await client.GetPartnerAccessTokensAsync(GetSpecialAuthenticationCredentials(password), partnerTaxId);
 
-        }
-
-        private object CreateInvoice(IAuthentication authentication)
-        {
-            return this.CreateSimplefiedInvoiceAsync().Result;
-        }
-
-        public async Task<Object> CreateSimplefiedInvoiceAsync()
-        {
-            var test = new Invoicing_v2.InvoicingSoapClient(Invoicing_v2.InvoicingSoapClient.EndpointConfiguration.InvoicingSoap12);
-
-            return test.DocumentCreateAsync(new Invoicing_v2.Authentication(), new Invoicing_v2.Client(), new Invoicing_v2.DocumentIn(), IsToClose: false, SendTo: null);
+                return GetPartnerAccessTokenAPIResponse(serviceResponse);
+            });
         }
 
         #endregion
 
-        private APIDocumentGetResponse DocumentGetAPIResponse(DocumentGetResponse serviceResponse)
-        {
-            return new APIDocumentGetResponse();
-        }
+        #region Transformers
 
         private APIAddPartnerResponse AddPartnerAPIResponse(AddPartnerResponse serviceResponse)
         {
             return new APIAddPartnerResponse(serviceResponse.Body.ResponseAddPartner);
         }
 
+        private APIGetPartnerAccessTokensResponse GetPartnerAccessTokenAPIResponse(GetPartnerAccessTokensResponse serviceResponse)
+        {
+            var apiResponse = new APIGetPartnerAccessTokensResponse(serviceResponse.Body.ResponseGetPartnerAccessTokens);
+
+            if (serviceResponse.Body.ResponseGetPartnerAccessTokens.Object != null
+                && serviceResponse.Body.ResponseGetPartnerAccessTokens.Object.Any())
+            {
+                apiResponse.AccessTokens = serviceResponse.Body.ResponseGetPartnerAccessTokens.Object
+                    .Select(token => new Models.APIAccessTokenBase()
+                    {
+                        AccessToken = token.AccessToken,
+                        Description = token.Description
+                    })
+                    .ToList();
+            }
+
+            return apiResponse;
+        }
+
+        private APIDocumentGetResponse DocumentGetAPIResponse(DocumentGetResponse serviceResponse)
+        {
+            return new APIDocumentGetResponse();
+        }
+
+
+        #endregion
+
         private Authentication GetAuthenticationCredentials()
         {
             return new Invoicing_v2.Authentication()
             {
                 Email = this.EMail,
-                Token = "bU7iHN9HeE9wsKfm4EN-"
+                Token = this.Token
+            };
+        }
+
+        private SpecialAuthentication GetSpecialAuthenticationCredentials(string password)
+        {
+            return new Invoicing_v2.SpecialAuthentication()
+            {
+                Email = this.EMail,
+                Token = this.Token,
+                Password = password
             };
         }
 
