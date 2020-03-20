@@ -26,7 +26,7 @@ namespace Magni.APIClient.V2
 
         public APIAddPartnerResponse AddPartner(PartnerInformation newPartner)
         {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            Invoicing_v2.InvoicingSoapClient client = GetAPIClient();
 
             var request = new NewPartnerInformation()
             {
@@ -48,7 +48,7 @@ namespace Magni.APIClient.V2
 
         public APIDocumentGetResponse DocumentGet(int documentId)
         {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            Invoicing_v2.InvoicingSoapClient client = GetAPIClient();
             
             var serviceResponse = client.DocumentGetAsync(GetAuthenticationCredentials(), documentId).Result;
 
@@ -57,9 +57,9 @@ namespace Magni.APIClient.V2
        
         public APIGetPartnerAccessTokensResponse GetPartnerAccessTokens(string password, string partnerTaxId)
         {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            Invoicing_v2.InvoicingSoapClient client = GetAPIClient();
 
-            var serviceResponse = client.GetPartnerAccessTokensAsync(GetSpecialAuthenticationCredentials(password), partnerTaxId).Result;
+            var serviceResponse = client.GetPartnerAccessTokensAsync(GetAPISpecialAuthenticationCredentials(password), partnerTaxId).Result;
 
             return GetPartnerAccessTokenAPIResponse(serviceResponse);
         }
@@ -73,7 +73,7 @@ namespace Magni.APIClient.V2
         /// <param name="sentTo">Upon closing the document an email can be sent with a notification of the document to an email address.</param>
         public APIDocumentCreateResponse InvoiceSimplifiedCreate(Models.Client client, SimplifiedInvoice invoice, bool isToClose, string sentTo)
         {
-            Invoicing_v2.InvoicingSoapClient apiClient = GetClient();
+            Invoicing_v2.InvoicingSoapClient apiClient = GetAPIClient();
             Invoicing_v2.Client invoiceClient = ToInvoicingClient(client);
 
             DocumentIn document = ToInvoicingDocument(invoice);
@@ -85,7 +85,7 @@ namespace Magni.APIClient.V2
 
         public APIDocumentCreateResponse CreditNoteCreate(Models.Client client, CreditNote invoice, bool isToClose, string sentTo)
         {
-            Invoicing_v2.InvoicingSoapClient apiClient = GetClient();
+            Invoicing_v2.InvoicingSoapClient apiClient = GetAPIClient();
 
             Invoicing_v2.Client invoiceClient = ToInvoicingClient(client);
 
@@ -102,7 +102,7 @@ namespace Magni.APIClient.V2
 
         public Task<APIAddPartnerResponse> AddPartnerAsync(PartnerInformation newPartner)
         {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            Invoicing_v2.InvoicingSoapClient client = GetAPIClient();
 
             var request = new NewPartnerInformation()
             {
@@ -127,7 +127,7 @@ namespace Magni.APIClient.V2
 
         public Task<APIDocumentGetResponse> DocumentGetAsync(int documentId)
         {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            Invoicing_v2.InvoicingSoapClient client = GetAPIClient();
 
             return Task.Run<APIDocumentGetResponse>(async () => {
                 var serviceResponse = await client.DocumentGetAsync(GetAuthenticationCredentials(), documentId);
@@ -138,10 +138,10 @@ namespace Magni.APIClient.V2
 
         public Task<APIGetPartnerAccessTokensResponse> GetPartnerAccessTokensAsync(string password, string partnerTaxId)
         {
-            Invoicing_v2.InvoicingSoapClient client = GetClient();
+            Invoicing_v2.InvoicingSoapClient client = GetAPIClient();
 
             return Task.Run<APIGetPartnerAccessTokensResponse>(async () => {
-                var serviceResponse = await client.GetPartnerAccessTokensAsync(GetSpecialAuthenticationCredentials(password), partnerTaxId);
+                var serviceResponse = await client.GetPartnerAccessTokensAsync(GetAPISpecialAuthenticationCredentials(password), partnerTaxId);
 
                 return GetPartnerAccessTokenAPIResponse(serviceResponse);
             });
@@ -211,15 +211,15 @@ namespace Magni.APIClient.V2
         {
             var document = new DocumentIn()
             {
-                Type = invoice.Type.ToString(),
-                Date = invoice.Date.ToString(Constants.Format.DateTime.FullDateTime),
-                DueDate = invoice.DueDate.ToString(Constants.Format.DateTime.FullDateTime),
+                Type = Convert.ToChar(invoice.Type).ToString(),
+                Date = invoice.Date.ToString(Constants.Format.DateTime.ShortDate),
+                DueDate = invoice.DueDate.ToString(Constants.Format.DateTime.ShortDate),
                 Description = invoice.Description,
                 Serie = invoice.Series,
                 TaxExemptionReasonCode = invoice.TaxExemptionReasonCode,
                 Currency = invoice.Currency,
                 EuroRate = invoice.EuroRate,
-                //Retention = invoice.Retemtion,
+                //Retention = invoice.Retention,
                 ExternalId = invoice.ExternalId,
                 Id = invoice.Id
             };
@@ -255,7 +255,7 @@ namespace Magni.APIClient.V2
             };
         }
 
-        private SpecialAuthentication GetSpecialAuthenticationCredentials(string password)
+        private SpecialAuthentication GetAPISpecialAuthenticationCredentials(string password)
         {
             return new Invoicing_v2.SpecialAuthentication()
             {
@@ -265,7 +265,7 @@ namespace Magni.APIClient.V2
             };
         }
 
-        private InvoicingSoapClient GetClient()
+        private InvoicingSoapClient GetAPIClient()
         {
             if (string.IsNullOrEmpty(this.Endpoint))
             {

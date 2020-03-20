@@ -42,7 +42,7 @@ namespace Magni.Core.APIClientTester
                 CompanyLegalName = "Emp Fix Lda",
                 CompanyPostCode = "1500-244",
                 CompanyTaxId = "999999990",
-                UserEmail = "sb.user.one@magnifinance.com",
+                UserEmail = "sbuserone@magnifinance.com",
                 UserName = "sandbox user 01",
                 UserPhone = "456789456"
             };

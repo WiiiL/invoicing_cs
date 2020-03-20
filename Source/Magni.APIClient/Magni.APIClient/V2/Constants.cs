@@ -10,7 +10,7 @@ namespace Magni.APIClient.V2
         {
             public class DateTime
             {
-                public const string FullDateTime = "yyyy-MM-dd HH:mm";
+                public const string ShortDate = "yyyy-MM-dd";
             }
         }
     }
