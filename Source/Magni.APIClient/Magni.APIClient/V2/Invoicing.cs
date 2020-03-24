@@ -1,7 +1,8 @@
 ﻿using Invoicing_v2;
 using Magni.APIClient.V2.Models;
-using Magni.APIClient.V2.Models.Interfaces;
+using Magni.APIClient.V2.Models.BulkQueue;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,6 +13,21 @@ namespace Magni.APIClient.V2
         public string Endpoint { get; set; }
         public string EMail { get; set; }
         public string Token { get; set; }
+
+        private QueueEngine queueEngine;
+
+        public QueueEngine QueueEngine
+        {
+            get
+            {
+                if(this.queueEngine == null)
+                {
+                    this.queueEngine = new QueueEngine();
+                }
+
+                return this.queueEngine;
+            }
+        }
 
 
         public Invoicing(string endpoint, string email, string token)
@@ -83,6 +99,13 @@ namespace Magni.APIClient.V2
             return new APIDocumentCreateResponse(serviceResponse);
         }
 
+        /// <summary>
+        /// Create Credit Note
+        /// </summary>
+        /// <param name="client">Client identification</param>
+        /// <param name="invoice">Purchase information</param>
+        /// <param name="isToClose">Should the document be closed (true) in which case it cannot be later changed and a PDF and document number are generated or should the document be created as a draft (false) in which case no PDF or document number are generated.</param>
+        /// <param name="sentTo">Upon closing the document an email can be sent with a notification of the document to an email address.</param>
         public APIDocumentCreateResponse CreditNoteCreate(Models.Client client, CreditNote invoice, bool isToClose, string sentTo)
         {
             Invoicing_v2.InvoicingSoapClient apiClient = GetAPIClient();
@@ -94,6 +117,12 @@ namespace Magni.APIClient.V2
             var serviceResponse = apiClient.DocumentCreateAsync(GetAuthenticationCredentials(), invoiceClient, document, isToClose, sentTo).Result;
 
             return new APIDocumentCreateResponse(serviceResponse);
+        }
+
+
+        public void EnqueueDocuments(List<QueueItem> items)
+        {
+            this.QueueEngine.AddToQueue(items);
         }
 
         #endregion

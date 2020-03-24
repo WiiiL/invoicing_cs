@@ -1,4 +1,6 @@
 ﻿using Magni.APIClient.V2.Models;
+using Magni.APIClient.V2.Models.BulkQueue;
+using Magni.Core.APIClientTester.Scenarios;
 using System;
 using System.Linq;
 
@@ -32,7 +34,9 @@ namespace Magni.Core.APIClientTester
             //CreateSimpleInvoice_Scenario_01(api_01);
 
             //AddPartner_Scenario_01(api_bo_tv);
-            CreateSimpleInvoice_Scenario_01(api_bo_tv);
+            //CreateSimpleInvoice_Scenario_01(api_bo_tv);
+
+            BulkInvoiceCreate.BulkInvoiceCreate_Scenario_01(api_01);
         }
 
 
@@ -84,7 +88,7 @@ namespace Magni.Core.APIClientTester
                 CountryCode = "PT",
                 Name = "Consumidor Final",
                 NIF = "999999990",
-                PhoneNumber = "956758481",
+                PhoneNumber = "111111112",
                 PostCode = "1500-244"
             };
 
@@ -150,6 +154,7 @@ namespace Magni.Core.APIClientTester
                 }
             }
         }
+
 
         #endregion
 
